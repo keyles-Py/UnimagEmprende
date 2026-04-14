@@ -1,4 +1,7 @@
+using EventManager.Application.Interfaces;
 using EventManager.Infrastructure.Persistence;
+using EventManager.Infrastructure.Persistence.Repositories;
+using EventManager.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +25,11 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        // Los repositorios e interfaces se registrarán aquí a partir del PBI 2.
+        // Repositorios
+        services.AddScoped<IUserRepository, UserRepository>();
+
+        // Servicios de seguridad
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }
