@@ -50,3 +50,91 @@ De acuerdo con los requerimientos habilitados para la primera fase, el equipo se
 ## 5. Gestión del Proyecto (Backlog)
 
 El seguimiento de las tareas se realiza a través de **GitHub Projects**, donde cada requerimiento se descompone en Product Backlog Items (PBIs). Cada PBI cuenta con criterios de aceptación definidos para asegurar la calidad de la entrega y permitir la validación técnica por parte del equipo.
+
+---
+
+## 6. Guía de Configuración y Arranque (PBI 1)
+
+### Requisitos previos
+
+| Herramienta | Versión mínima |
+|-------------|---------------|
+| .NET SDK    | 8.0           |
+| Docker      | 24+           |
+| Docker Compose | v2         |
+| Git         | 2.44+         |
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd UnimagEmprende
+```
+
+### 2. Configurar variables de entorno
+
+```bash
+cp .env.example .env
+# Editar .env con los valores reales antes de continuar
+```
+
+Variables requeridas en `.env`:
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | Cadena de conexión a PostgreSQL (formato Npgsql) |
+| `JWT__Secret` | Clave secreta para firmar tokens JWT (≥ 32 chars) |
+| `JWT__Issuer` | Emisor del token |
+| `JWT__Audience` | Audiencia del token |
+| `JWT__ExpiryMinutes` | Minutos de validez del token |
+| `ASPNETCORE_ENVIRONMENT` | `Development` / `Production` |
+
+### 3. Levantar los servicios con Docker
+
+```bash
+docker compose up -d --build
+```
+
+Servicios disponibles:
+
+| Servicio | URL |
+|----------|-----|
+| API      | http://localhost:5000 |
+| pgAdmin  | http://localhost:5050 |
+| PostgreSQL | localhost:5432 |
+
+### 4. Verificar que la API está activa
+
+```bash
+curl http://localhost:5000/health
+# Respuesta esperada: {"status":"healthy","timestamp":"..."}
+```
+
+### 5. Ejecutar migraciones
+
+```bash
+# Desde la raíz del repositorio
+dotnet ef database update \
+  --project EventManager.Infrastructure \
+  --startup-project EventManager.API
+```
+
+### 6. Desarrollo local (sin Docker)
+
+```bash
+# Asegúrate de tener PostgreSQL corriendo localmente y el .env configurado
+dotnet run --project EventManager.API
+```
+
+### Estructura de la solución
+
+```
+EventManager.sln
+├── EventManager.API/            → Entrada HTTP (controllers, Program.cs)
+├── EventManager.Application/   → Lógica de negocio e interfaces
+├── EventManager.Domain/        → Entidades y enums (sin dependencias)
+└── EventManager.Infrastructure/
+    ├── Migrations/              → Migraciones de EF Core
+    ├── Persistence/             → AppDbContext
+    └── Extensions/              → ServiceCollectionExtensions
+```

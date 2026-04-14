@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  # ── API ────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eventmanager_api
+    ports:
+      - "5000:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT__Secret: ${JWT__Secret}
+      JWT__Issuer: ${JWT__Issuer}
+      JWT__Audience: ${JWT__Audience}
+      JWT__ExpiryMinutes: ${JWT__ExpiryMinutes}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - eventmanager_net
+    restart: unless-stopped
+
+  # ── PostgreSQL 16 ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: eventmanager_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: eventmanager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - eventmanager_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eventmanager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── pgAdmin ────────────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: eventmanager_pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@eventmanager.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - eventmanager_net
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  eventmanager_net:
+    driver: bridge

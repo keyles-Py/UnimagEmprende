@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- API solo referencia Application, nunca Infrastructure directamente -->
+    <ProjectReference Include="..\EventManager.Application\EventManager.Application.csproj" />
+    <ProjectReference Include="..\EventManager.Infrastructure\EventManager.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
