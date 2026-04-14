@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
 
         // Servicios de seguridad
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

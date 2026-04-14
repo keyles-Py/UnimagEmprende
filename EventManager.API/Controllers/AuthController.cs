@@ -50,4 +50,37 @@ public sealed class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Ocurrió un error interno. Intente más tarde." });
         }
     }
+
+    /// <summary>
+    /// Inicia sesión y retorna un JWT Bearer token.
+    /// </summary>
+    /// <response code="200">Login exitoso, retorna token y datos del usuario.</response>
+    /// <response code="400">Datos de entrada inválidos (validación FluentValidation).</response>
+    /// <response code="401">Credenciales incorrectas o usuario inactivo.</response>
+    /// <response code="500">Error interno del servidor.</response>
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<LoginResponse>> Login(
+        [FromBody] LoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await _authService.LoginAsync(request, cancellationToken);
+            return Ok(response);
+        }
+        catch (InvalidCredentialsException)
+        {
+            _logger.LogWarning("Login fallido para el email {Email}.", request.Email);
+            return Unauthorized(new { message = "Las credenciales proporcionadas son inválidas." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error inesperado al intentar login.");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Ocurrió un error interno. Intente más tarde." });
+        }
+    }
 }
