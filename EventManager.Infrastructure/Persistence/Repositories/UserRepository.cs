@@ -19,6 +19,13 @@ public sealed class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
 
+    public async Task<User?> GetByEmailWithRolesAsync(string email, CancellationToken cancellationToken = default) =>
+        await _context.Users
+            .AsNoTracking()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
+
     public async Task<User> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         await _context.Users.AddAsync(user, cancellationToken);

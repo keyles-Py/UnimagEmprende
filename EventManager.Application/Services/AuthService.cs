@@ -11,15 +11,18 @@ public sealed class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IJwtTokenService _jwtTokenService;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
+        IJwtTokenService jwtTokenService,
         ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
+        _jwtTokenService = jwtTokenService;
         _logger = logger;
     }
 
@@ -64,6 +67,48 @@ public sealed class AuthService : IAuthService
             FirstName = created.FirstName,
             LastName = created.LastName,
             Email = created.Email
+        };
+    }
+
+    public async Task<LoginResponse> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Intento de login para el email {Email}", request.Email);
+
+        var user = await _userRepository.GetByEmailWithRolesAsync(request.Email, cancellationToken);
+        if (user is null)
+        {
+            _logger.LogWarning("Login fallido: email {Email} no encontrado.", request.Email);
+            throw new InvalidCredentialsException();
+        }
+
+        if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Login fallido: contraseña incorrecta para email {Email}.", request.Email);
+            throw new InvalidCredentialsException();
+        }
+
+        if (!user.IsActive)
+        {
+            _logger.LogWarning("Login fallido: usuario {Email} está inactivo.", request.Email);
+            throw new InvalidCredentialsException();
+        }
+
+        var roleName = user.UserRoles.FirstOrDefault()?.Role.Name.ToString()
+            ?? RoleType.User.ToString();
+
+        var token = _jwtTokenService.GenerateToken(user, roleName);
+
+        _logger.LogInformation("Login exitoso para el usuario {UserId}.", user.Id);
+
+        return new LoginResponse
+        {
+            Token = token,
+            Email = user.Email,
+            FullName = $"{user.FirstName} {user.LastName}",
+            Role = roleName,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(60)
         };
     }
 }
