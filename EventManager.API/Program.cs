@@ -1,16 +1,25 @@
 using EventManager.Infrastructure.Extensions;
+using EventManager.Infrastructure.Persistence;
+using EventManager.Infrastructure.Persistence.SeedData;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Servicios ──────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// Registro de dependencias de Infrastructure (EF Core, repositorios, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── Pipeline ───────────────────────────────────────────────────────────────
 var app = builder.Build();
+
+// Aplicar migraciones y seed al inicio
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+    await RoleSeeder.SeedAsync(db);
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -21,7 +30,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// Endpoint de salud: GET /health → 200 OK
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
