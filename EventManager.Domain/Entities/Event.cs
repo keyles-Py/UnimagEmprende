@@ -11,6 +11,7 @@ public class Event : BaseEntity
     public DateTime? EndDate { get; set; }
     public int MaxCapacity { get; set; }
     public bool HasParking { get; set; }
+    public int? ParkingCapacity { get; set; }
     public Enums.EventStatus Status { get; set; }
     public Guid OrganizerId { get; set; }
     public User Organizer { get; set; } = null!;
