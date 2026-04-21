@@ -11,4 +11,5 @@ public class User : BaseEntity
     public bool IsActive { get; set; }
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<Registration> Registrations { get; set; } = new List<Registration>();
 }
