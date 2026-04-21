@@ -13,6 +13,9 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<Registration> Registrations => Set<Registration>();
+    public DbSet<EventFile> EventFiles => Set<EventFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

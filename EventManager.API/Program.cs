@@ -53,6 +53,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // Application services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 // FluentValidation — auto-valida los modelos de entrada antes de llegar al controller
 builder.Services.AddFluentValidationAutoValidation();
