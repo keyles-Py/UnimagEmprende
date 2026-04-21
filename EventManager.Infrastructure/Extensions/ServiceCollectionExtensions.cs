@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
 
         // Repositorios
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
 
         // Servicios de seguridad
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
