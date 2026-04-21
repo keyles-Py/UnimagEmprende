@@ -30,16 +30,5 @@ public sealed class UpdateEventRequestValidator : AbstractValidator<UpdateEventR
 
         RuleFor(x => x.MaxCapacity)
             .GreaterThan(0).WithMessage("La capacidad máxima debe ser mayor a cero.");
-
-        RuleFor(x => x.ParkingCapacity)
-            .GreaterThanOrEqualTo(0).WithMessage("La capacidad de parqueadero no puede ser negativa.")
-            .Must((request, capacity) => !request.HasParking || capacity > 0)
-            .When(x => x.ParkingCapacity.HasValue)
-            .WithMessage("La capacidad de parqueadero debe ser mayor a cero cuando el parqueadero está habilitado.");
-
-        RuleFor(x => x.ParkingCapacity)
-            .Null()
-            .When(x => !x.HasParking)
-            .WithMessage("No se pueden asignar cupos de parqueadero si el evento no tiene parqueadero habilitado.");
     }
 }

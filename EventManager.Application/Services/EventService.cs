@@ -48,7 +48,6 @@ public sealed class EventService : IEventService
             EndDate = request.EndDate,
             MaxCapacity = request.MaxCapacity,
             HasParking = request.HasParking,
-            ParkingCapacity = request.HasParking ? request.ParkingCapacity : null,
             Status = EventStatus.Borrador,
             OrganizerId = request.OrganizerId
         };
@@ -84,7 +83,6 @@ public sealed class EventService : IEventService
         eventEntity.EndDate = request.EndDate;
         eventEntity.MaxCapacity = request.MaxCapacity;
         eventEntity.HasParking = request.HasParking;
-        eventEntity.ParkingCapacity = request.HasParking ? request.ParkingCapacity : null;
         eventEntity.Status = request.Status;
 
         var updated = await _eventRepository.UpdateAsync(eventEntity, cancellationToken);
@@ -162,7 +160,6 @@ public sealed class EventService : IEventService
             EndDate = eventEntity.EndDate,
             MaxCapacity = eventEntity.MaxCapacity,
             HasParking = eventEntity.HasParking,
-            ParkingCapacity = eventEntity.ParkingCapacity,
             Status = eventEntity.Status,
             OrganizerId = eventEntity.OrganizerId,
             OrganizerName = $"{eventEntity.Organizer.FirstName} {eventEntity.Organizer.LastName}",
@@ -181,8 +178,7 @@ public sealed class EventService : IEventService
             Location = eventEntity.Location,
             Status = eventEntity.Status,
             MaxCapacity = eventEntity.MaxCapacity,
-            HasParking = eventEntity.HasParking,
-            ParkingCapacity = eventEntity.ParkingCapacity
+            HasParking = eventEntity.HasParking
         };
     }
 }

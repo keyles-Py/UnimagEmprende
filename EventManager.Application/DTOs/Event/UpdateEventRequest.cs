@@ -12,6 +12,5 @@ public sealed class UpdateEventRequest
     public DateTime? EndDate { get; set; }
     public int MaxCapacity { get; set; }
     public bool HasParking { get; set; }
-    public int? ParkingCapacity { get; set; }
     public EventStatus Status { get; set; }
 }

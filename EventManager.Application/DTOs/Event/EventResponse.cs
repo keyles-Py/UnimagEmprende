@@ -12,7 +12,6 @@ public sealed class EventResponse
     public DateTime? EndDate { get; set; }
     public int MaxCapacity { get; set; }
     public bool HasParking { get; set; }
-    public int? ParkingCapacity { get; set; }
     public EventStatus Status { get; set; }
     public Guid OrganizerId { get; set; }
     public string OrganizerName { get; set; } = string.Empty;

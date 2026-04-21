@@ -11,5 +11,4 @@ public sealed class EventListItemResponse
     public EventStatus Status { get; set; }
     public int MaxCapacity { get; set; }
     public bool HasParking { get; set; }
-    public int? ParkingCapacity { get; set; }
 }

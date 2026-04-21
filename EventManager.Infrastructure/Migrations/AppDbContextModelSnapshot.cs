@@ -77,10 +77,6 @@ namespace EventManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organizer_id");
 
-                    b.Property<int?>("ParkingCapacity")
-                        .HasColumnType("integer")
-                        .HasColumnName("parking_capacity");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
@@ -303,7 +299,7 @@ namespace EventManager.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("EventManager.Domain.Entities.User", "User")
-                        .WithMany("Registrations")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -346,8 +342,6 @@ namespace EventManager.Infrastructure.Migrations
 
             modelBuilder.Entity("EventManager.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Registrations");
-
                     b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618

@@ -45,9 +45,6 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
             .HasColumnName("has_parking")
             .HasDefaultValue(false);
 
-        builder.Property(e => e.ParkingCapacity)
-            .HasColumnName("parking_capacity");
-
         builder.Property(e => e.Status)
             .HasColumnName("status")
             .IsRequired()
