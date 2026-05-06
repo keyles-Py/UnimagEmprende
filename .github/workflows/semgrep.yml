@@ -1,0 +1,207 @@
+name: SAST – Semgrep
+
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │  RAMA / TRIGGER          TIPO DE SCAN          POLÍTICA                 │
+# │  feature/**  push        Diff scan (rápido)    No bloquea               │
+# │  PR → develop            Full scan + diff       Bloquea si ERROR         │
+# │  release/** hotfix/**    Full scan + SARIF      Bloqueo estricto         │
+# │  PR → main               Full scan + audit      Bloqueo estricto         │
+# └─────────────────────────────────────────────────────────────────────────┘
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  security-events: write   # necesario para subir SARIF a GitHub Code Scanning
+
+jobs:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 1. feature/** · push · Diff scan rápido · NO bloquea
+  # ──────────────────────────────────────────────────────────────────────────
+  feature-diff-scan:
+    name: "Diff scan – feature/* (no bloquea)"
+    if: >
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/heads/feature/')
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semgrep diff scan
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          BEFORE="${{ github.event.before }}"
+          ZERO="0000000000000000000000000000000000000000"
+
+          if [ "$BEFORE" = "$ZERO" ]; then
+            # Primer push a la rama: scan completo sin baseline
+            semgrep \
+              --config p/csharp \
+              --config p/secrets \
+              --json \
+              --output semgrep-diff.json \
+              --metrics=off
+          else
+            semgrep \
+              --config p/csharp \
+              --config p/secrets \
+              --baseline-commit "$BEFORE" \
+              --json \
+              --output semgrep-diff.json \
+              --metrics=off
+          fi
+        continue-on-error: true   # nunca bloquea el push
+
+      - name: Subir resultados como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-diff-${{ github.sha }}
+          path: semgrep-diff.json
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 2. PR → develop · Full scan + diff · Bloquea si ERROR
+  # ──────────────────────────────────────────────────────────────────────────
+  pr-develop-scan:
+    name: "Full scan + diff – PR a develop (bloquea en ERROR)"
+    if: >
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semgrep full scan + diff
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          semgrep \
+            --config p/csharp \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/jwt \
+            --baseline-commit "${{ github.event.pull_request.base.sha }}" \
+            --severity ERROR \
+            --error \
+            --json \
+            --output semgrep-pr-develop.json \
+            --metrics=off
+
+      - name: Subir resultados como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-pr-develop-${{ github.sha }}
+          path: semgrep-pr-develop.json
+          retention-days: 14
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 3. release/** y hotfix/** · push o PR · Full scan + SARIF · Bloqueo estricto
+  # ──────────────────────────────────────────────────────────────────────────
+  release-hotfix-scan:
+    name: "Full scan + SARIF – release/hotfix (bloqueo estricto)"
+    if: >
+      (github.event_name == 'push' && (
+        startsWith(github.ref, 'refs/heads/release/') ||
+        startsWith(github.ref, 'refs/heads/hotfix/')
+      )) ||
+      (github.event_name == 'pull_request' && (
+        startsWith(github.head_ref, 'release/') ||
+        startsWith(github.head_ref, 'hotfix/')
+      ))
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semgrep full scan – SARIF
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          semgrep \
+            --config p/csharp \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/jwt \
+            --sarif \
+            --output semgrep.sarif \
+            --error \
+            --metrics=off
+
+      - name: Subir SARIF a GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # 4. PR → main · Full scan + audit · Bloqueo estricto
+  # ──────────────────────────────────────────────────────────────────────────
+  pr-main-scan:
+    name: "Full scan + audit – PR a main (bloqueo estricto)"
+    if: >
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semgrep full audit scan – SARIF
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          semgrep \
+            --config p/csharp \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/jwt \
+            --config p/default \
+            --sarif \
+            --output semgrep-main.sarif \
+            --error \
+            --metrics=off
+
+      - name: Subir SARIF a GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep-main.sarif
+
+      - name: Archivar artefacto de auditoría (30 días)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-audit-main-${{ github.sha }}
+          path: semgrep-main.sarif
+          retention-days: 30

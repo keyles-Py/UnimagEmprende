@@ -1,0 +1,55 @@
+name: .NET CI – Build & Test
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 8)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: eventmanager_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore EventManager.sln
+
+      - name: Build (Release)
+        run: dotnet build EventManager.sln -c Release --no-restore
+
+      - name: Run tests
+        run: dotnet test EventManager.sln --no-build -c Release --verbosity normal
+        env:
+          ConnectionStrings__DefaultConnection: >-
+            Host=localhost;Port=5432;Database=eventmanager_test;
+            Username=testuser;Password=testpass
