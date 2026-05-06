@@ -68,7 +68,9 @@ public sealed class RegistrationService : IRegistrationService
         {
             EventId = request.EventId,
             UserId = request.UserId,
-            RegisteredAt = DateTime.UtcNow
+            RegisteredAt = DateTime.UtcNow,
+            CheckInToken = Guid.NewGuid(),
+            CheckedIn = false
         };
 
         var created = await _registrationRepository.RegisterAsync(registration, cancellationToken);

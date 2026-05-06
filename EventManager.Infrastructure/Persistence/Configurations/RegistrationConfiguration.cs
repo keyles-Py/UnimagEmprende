@@ -22,12 +22,30 @@ public class RegistrationConfiguration : IEntityTypeConfiguration<Registration>
             .HasColumnName("registered_at")
             .IsRequired();
 
+        // ── Check-in QR ───────────────────────────────────────────────────
+        builder.Property(r => r.CheckInToken)
+            .HasColumnName("check_in_token")
+            .IsRequired();
+
+        builder.HasIndex(r => r.CheckInToken)
+            .IsUnique()
+            .HasDatabaseName("IX_registrations_check_in_token");
+
+        builder.Property(r => r.CheckedIn)
+            .HasColumnName("checked_in")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(r => r.CheckedInAt)
+            .HasColumnName("checked_in_at");
+        // ─────────────────────────────────────────────────────────────────
+
         builder.HasOne(r => r.Event)
             .WithMany(e => e.Registrations)
             .HasForeignKey(r => r.EventId);
 
         builder.HasOne(r => r.User)
-            .WithMany()
+            .WithMany(u => u.Registrations)
             .HasForeignKey(r => r.UserId);
     }
 }

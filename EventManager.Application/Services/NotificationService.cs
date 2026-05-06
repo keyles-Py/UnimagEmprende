@@ -39,7 +39,7 @@ public sealed class NotificationService : INotificationService
             return;
         }
 
-        var qrBytes = _qrCodeGenerator.Generate($"registration:{eventId}:{userId}");
+        var qrBytes = _qrCodeGenerator.Generate(registration.CheckInToken.ToString());
 
         var message = new EmailMessage
         {
