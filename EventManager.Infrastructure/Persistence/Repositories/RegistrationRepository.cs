@@ -52,4 +52,18 @@ public sealed class RegistrationRepository : IRegistrationRepository
             .Include(r => r.User)
             .Include(r => r.Event)
             .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId, cancellationToken);
+
+    public async Task<Registration?> GetByTokenAsync(Guid token, CancellationToken cancellationToken = default) =>
+        await _context.Registrations
+            .AsNoTracking()
+            .Include(r => r.User)
+            .Include(r => r.Event)
+            .FirstOrDefaultAsync(r => r.CheckInToken == token, cancellationToken);
+
+    public async Task UpdateCheckInAsync(Guid eventId, Guid userId, DateTime checkedInAt, CancellationToken cancellationToken = default) =>
+        await _context.Registrations
+            .Where(r => r.EventId == eventId && r.UserId == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.CheckedIn, true)
+                .SetProperty(r => r.CheckedInAt, checkedInAt), cancellationToken);
 }

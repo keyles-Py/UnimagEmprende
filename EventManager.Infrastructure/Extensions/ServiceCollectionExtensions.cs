@@ -61,6 +61,9 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IEmailJobService, EmailJobService>();
 
+        // ── Servicios de aplicación (check-in) ────────────────────────────
+        services.AddScoped<ICheckInService, CheckInService>();
+
         return services;
     }
 }

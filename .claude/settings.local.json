@@ -5,7 +5,8 @@
       "Bash(dotnet sln:*)",
       "Bash(dotnet build:*)",
       "Bash(grep -E '\\\\.\\(cs|csproj|json|yml|md\\)$')",
-      "Bash(dotnet package *)"
+      "Bash(dotnet package *)",
+      "Bash(dotnet ef *)"
     ]
   }
 }

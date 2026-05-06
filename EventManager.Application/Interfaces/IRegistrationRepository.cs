@@ -10,4 +10,6 @@ public interface IRegistrationRepository
     Task<IReadOnlyList<Registration>> GetRegistrationsByUserAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Registration>> GetRegistrationsByEventAsync(Guid eventId, CancellationToken cancellationToken = default);
     Task<Registration?> GetWithDetailsAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default);
+    Task<Registration?> GetByTokenAsync(Guid token, CancellationToken cancellationToken = default);
+    Task UpdateCheckInAsync(Guid eventId, Guid userId, DateTime checkedInAt, CancellationToken cancellationToken = default);
 }
