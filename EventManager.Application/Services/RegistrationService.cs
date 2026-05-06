@@ -11,15 +11,18 @@ public sealed class RegistrationService : IRegistrationService
 {
     private readonly IRegistrationRepository _registrationRepository;
     private readonly IEventRepository _eventRepository;
+    private readonly IEmailJobService _emailJobService;
     private readonly ILogger<RegistrationService> _logger;
 
     public RegistrationService(
         IRegistrationRepository registrationRepository,
         IEventRepository eventRepository,
+        IEmailJobService emailJobService,
         ILogger<RegistrationService> logger)
     {
         _registrationRepository = registrationRepository;
         _eventRepository = eventRepository;
+        _emailJobService = emailJobService;
         _logger = logger;
     }
 
@@ -73,6 +76,9 @@ public sealed class RegistrationService : IRegistrationService
         _logger.LogInformation(
             "Usuario '{UserId}' inscrito exitosamente al evento '{EventId}'.",
             request.UserId, request.EventId);
+
+        _emailJobService.EnqueueRegistrationConfirmation(created.EventId, created.UserId);
+        _emailJobService.ScheduleEventReminder(created.EventId, created.UserId, eventEntity.StartDate);
 
         return new RegistrationResponse
         {

@@ -9,4 +9,5 @@ public interface IRegistrationRepository
     Task<int> GetCountByEventAsync(Guid eventId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Registration>> GetRegistrationsByUserAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Registration>> GetRegistrationsByEventAsync(Guid eventId, CancellationToken cancellationToken = default);
+    Task<Registration?> GetWithDetailsAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default);
 }
