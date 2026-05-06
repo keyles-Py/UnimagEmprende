@@ -45,4 +45,11 @@ public sealed class RegistrationRepository : IRegistrationRepository
             .Where(r => r.EventId == eventId)
             .OrderByDescending(r => r.RegisteredAt)
             .ToListAsync(cancellationToken);
+
+    public async Task<Registration?> GetWithDetailsAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default) =>
+        await _context.Registrations
+            .AsNoTracking()
+            .Include(r => r.User)
+            .Include(r => r.Event)
+            .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId, cancellationToken);
 }

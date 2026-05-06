@@ -10,11 +10,16 @@ namespace EventManager.Application.Services;
 public sealed class EventService : IEventService
 {
     private readonly IEventRepository _eventRepository;
+    private readonly IEmailJobService _emailJobService;
     private readonly ILogger<EventService> _logger;
 
-    public EventService(IEventRepository eventRepository, ILogger<EventService> logger)
+    public EventService(
+        IEventRepository eventRepository,
+        IEmailJobService emailJobService,
+        ILogger<EventService> logger)
     {
         _eventRepository = eventRepository;
+        _emailJobService = emailJobService;
         _logger = logger;
     }
 
@@ -76,6 +81,11 @@ public sealed class EventService : IEventService
             throw new InvalidOperationException("La fecha de fin debe ser posterior a la fecha de inicio.");
         }
 
+        var hasKeyChange =
+            eventEntity.StartDate != request.StartDate ||
+            eventEntity.EndDate != request.EndDate ||
+            eventEntity.Location != request.Location;
+
         eventEntity.Name = request.Name;
         eventEntity.Description = request.Description;
         eventEntity.Location = request.Location;
@@ -86,6 +96,12 @@ public sealed class EventService : IEventService
         eventEntity.Status = request.Status;
 
         var updated = await _eventRepository.UpdateAsync(eventEntity, cancellationToken);
+
+        if (hasKeyChange)
+        {
+            _emailJobService.EnqueueEventChangedNotification(updated.Id);
+            _logger.LogInformation("Notificación de cambio encolada para EventId={EventId}", updated.Id);
+        }
 
         _logger.LogInformation("Evento actualizado exitosamente. Id: {EventId}", updated.Id);
 

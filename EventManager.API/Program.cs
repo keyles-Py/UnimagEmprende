@@ -6,6 +6,7 @@ using EventManager.Infrastructure.Persistence;
 using EventManager.Infrastructure.Persistence.SeedData;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -54,6 +55,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Application services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 
 // FluentValidation — auto-valida los modelos de entrada antes de llegar al controller
 builder.Services.AddFluentValidationAutoValidation();
@@ -100,6 +102,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHangfireDashboard("/hangfire");
 }
 
 app.UseHttpsRedirection();
